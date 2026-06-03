@@ -1,0 +1,22 @@
+module.exports = {
+  env: { node: true, es2022: true, jest: true },
+  extends: ['eslint:recommended'],
+  parserOptions: { ecmaVersion: 2022, sourceType: 'commonjs' },
+  rules: {
+    'no-console': 'warn',
+    'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    'no-var': 'error',
+    'prefer-const': 'error',
+    'eqeqeq': ['error', 'always'],
+    'no-eval': 'error',
+    'no-implied-eval': 'error',
+    'no-new-func': 'error',
+    'no-return-assign': 'error',
+    'no-throw-literal': 'error',
+    'prefer-promise-reject-errors': 'error',
+    'no-shadow': 'warn',
+    'curly': ['error', 'all'],
+    'no-duplicate-imports': 'error',
+  },
+  ignorePatterns: ['node_modules/', 'coverage/', 'dist/'],
+};
