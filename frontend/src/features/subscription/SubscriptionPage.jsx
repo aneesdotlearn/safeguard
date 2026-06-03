@@ -73,8 +73,15 @@ export default function SubscriptionPage() {
       rzp.on('payment.failed', () => toast.error('Payment failed'));
       rzp.open();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to initiate payment');
-    } finally {
+  console.error('RAZORPAY ERROR:', err);
+  console.error('RESPONSE:', err.response?.data);
+
+  toast.error(
+    err.response?.data?.message ||
+    err.message ||
+    'Failed to initiate payment'
+  );
+} finally {
       setProcessingPlan(null);
     }
   };
