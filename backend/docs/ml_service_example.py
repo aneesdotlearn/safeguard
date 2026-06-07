@@ -47,6 +47,7 @@ except FileNotFoundError:
 
 # ── Feature schema — must match featureExtractor.js exactly ───────────────────
 class FeatureVector(BaseModel):
+    safe_zone_inside:  float = Field(..., ge=0, le=1)
     hour_sin:          float = Field(..., ge=-1, le=1)
     hour_cos:          float = Field(..., ge=-1, le=1)
     day_sin:           float = Field(..., ge=-1, le=1)
@@ -85,6 +86,7 @@ FEATURE_ORDER = [
     "area_avg_risk",
     "user_weekly_freq", "user_monthly_freq",
     "lat_norm", "lng_norm",
+    "safe_zone_inside",
 ]
 
 
@@ -103,6 +105,7 @@ def generate_factors(fv: FeatureVector, score: int) -> List[str]:
     if fv.incident_high_1km >= 0.5: factors.append("High-severity incidents nearby")
     if fv.area_avg_risk   >= 0.6: factors.append("High baseline risk for this area")
     if fv.user_weekly_freq >= 0.6: factors.append("Multiple SOS alerts this week")
+    if fv.safe_zone_inside >= 0.5: factors.append("Inside a safe zone (risk reduced)")
     return factors or (["Low risk area"] if score < 40 else [])
 
 
@@ -125,22 +128,24 @@ def predict(request: PredictRequest, authorization: Optional[str] = Header(None)
     verify_api_key(authorization)
 
     fv = request.features
-    print("🔥 ML MODEL CALLED")
-    print("Features:", fv)
 
     if model is not None:
-        print("✅ USING TRAINED MODEL")
         # ── Real trained model ─────────────────────────────────────────────
         X = feature_to_array(fv)
         try:
             # If classifier: predict_proba gives P(high_risk)
             if hasattr(model, "predict_proba"):
                 prob = float(model.predict_proba(X)[0][1])
+
                 print("PROBABILITY =", prob)
-                score = int(round(20 + prob * 60))
+
+                score = int(round(prob * 100))
+
                 print("SCORE =", score)
                 print("FEATURES =", fv)
+
                 confidence = float(max(prob, 1 - prob))
+
                 print(f"🎯 Risk Score: {score}")
                 print(f"📊 Confidence: {confidence}")
             # If regressor: direct score output
@@ -166,9 +171,15 @@ def predict(request: PredictRequest, authorization: Optional[str] = Header(None)
         )
         score      = int(round(30 + raw * 70))   # scale to 30-100
         confidence = 0.5
-
+        print("FACTORS =", factors)
     factors = generate_factors(fv, score)
-    
+
+    print("🚀 RETURNING RESPONSE")
+    print({
+        "score": score,
+        "confidence": confidence,
+        "factors": factors
+    })
 
     return PredictResponse(
         score         = score,
@@ -176,4 +187,3 @@ def predict(request: PredictRequest, authorization: Optional[str] = Header(None)
         factors       = factors,
         model_version = "1.0.0",
     )
-    
