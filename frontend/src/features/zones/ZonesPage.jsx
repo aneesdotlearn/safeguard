@@ -129,12 +129,12 @@ function ZoneModal({ zone, onClose, onSave }) {
                   setForm((p) => ({ ...p, radius: Math.max(50, parseInt(e.target.value) || 50) }))
                 }
                 min={50}
-                max={50000}
+                max={500}
                 required
                 className="input-field"
               />
               <p className="text-xs text-neutral-400 mt-1">
-                Min 50m · Max 50,000m · Current: {form.radius}m
+                Min 50m · Max 500m · Current: {form.radius}m
               </p>
             </div>
 
